@@ -6,8 +6,7 @@ from pathlib import Path
 import numpy as np
 import plotly.graph_objects as go
 from copy import deepcopy
-
-
+import random
 
 class Betti_Curve:
     def __init__(self, BC, data):
@@ -43,25 +42,15 @@ class Betti_Curve:
         
         return figs
     
+    def save_PD(self):
+        PD = self.persistence_diagram()
+        
+        for i in range(PD.shape[0]):
+            np.savetxt(f"pd_sample{i}.csv", PD[i], delimiter=",", header="birth,death,dim", comments="")
 
-def main():
-    # Path to the gram_neg host data 
-    gram_neg_hosts = Path("evo2_data/gram_neg/hosts")
-    gram_pos_hosts = Path("evo2_data/gram_pos/hosts")
-
-    gnh_tensor_files = sorted(gram_neg_hosts.glob("*.pt"))
-    gph_tensor_files = sorted(gram_pos_hosts.glob("*.pt"))
-    
-    dataset = [gnh_tensor_files, gph_tensor_files]
-    
-    BC = BettiCurve()
-    
-    #BC_Graph(gnh_tensor_files)
-    declare_BC = Betti_Curve(BC, dataset)
-            
+def plot_BC(BC):
     print("Plotting...")
-    #figs = declare_BC.graph()
-    figs = declare_BC.graph()
+    figs = BC.graph()
     
     fig = go.Figure()
     
@@ -69,24 +58,85 @@ def main():
 
     for tr in figs[0].data:
         tr2 = deepcopy(tr)
-        tr2.name = f"gnh {tr2.name}"
-        tr2.legendgroup = "gnh"
+        tr2.name = f" Sampled gnh {tr2.name}"
+        tr2.legendgroup = "Sampled gnh"
         fig.add_trace(tr2)
 
     for tr in figs[1].data:
         tr2 = deepcopy(tr)
         tr2.name = f"gph {tr2.name}"
         tr2.legendgroup = "gph"
-        tr2.line = dict(dash="dash")   # just to visually separate groups
+        tr2.line = dict(dash="dash")   #just to visually separate groups
         fig.add_trace(tr2)
 
     fig.update_layout(
-        title="Betti curves: gnh vs gph",
+        title="Betti curves: Sampled gnh vs gph",
         xaxis_title="Filtration parameter",
         yaxis_title="Betti number",
     )
     fig.show()
     
+def gnh_vs_gph(gph_tensor_files):
+    print("Choosing random points")
+    
+    random.seed(0)
+    gnh_tensor_files = random.sample(gnh_tensor_files, k=209)
+
+    
+    dataset = [gnh_tensor_files, gph_tensor_files]
+    
+    BC = BettiCurve()
+    
+    #BC_Graph(gnh_tensor_files)
+    declare_BC = Betti_Curve(BC, dataset)
+    
+    #plot_BC(declare_BC= declare_BC)
+    declare_BC.save_PD()
+    
+
+def main():
+    # Path to the gram_neg host data 
+    print("Starting Code ")
+    gram_neg_hosts = Path("evo2_data/gram_neg/hosts")
+    gram_pos_hosts = Path("evo2_data/gram_pos/hosts")
+
+    gnh_tensor_files = sorted(gram_neg_hosts.glob("*.pt"))
+    #gph_tensor_files = sorted(gram_pos_hosts.glob("*.pt"))
+    
+    #sample 207 from the 308 
+    
+    m = 209
+    B = 10
+    # seeing the gnh's distribution stability by random sampling 209 points ten times and viewing their betti curve 
+    random.seed(0)
+    dataset = [random.sample(gnh_tensor_files, k=m) for _ in range(B)]
+    print("Random Sampling Complete")
+    BC = BettiCurve()
+    
+    #BC_Graph(gnh_tensor_files)
+    declare_BC = Betti_Curve(BC, dataset)
+    
+    print("Plotting...")
+    figs = declare_BC.graph()
+    
+    fig = go.Figure()
+    
+    # combine two graph in one 
+    for i, f in enumerate(figs):
+        for tr in f.data:
+            tr2 = deepcopy(tr)
+            tr2.opacity = 0.75         # make bootstraps faint so overlap is readable
+            fig.add_trace(tr2)
+
+    fig.update_layout(
+        title=f"Bootstrapped Gram-Negative Hosts Betti curves (B={B}, n={m})",
+        xaxis_title="Filtration parameter ε",
+        yaxis_title="Betti number",
+        hovermode="x unified"
+    )
+    fig.update_yaxes(rangemode="tozero")
+
+    fig.show()
     
 if __name__ == "__main__":
     main()
