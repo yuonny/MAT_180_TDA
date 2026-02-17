@@ -139,12 +139,15 @@ def main():
     gnh_tensor_files = sorted(gram_neg_hosts.glob("*.pt"))
     gph_tensor_files = sorted(gram_pos_hosts.glob("*.pt"))
     
+    # pass the input as an array for easier comparison later on
+    # easily can include more datasets, just by adding to this array
     dataset = [gnh_tensor_files, gph_tensor_files]
     
     BC = BettiCurve()
     
     # declares an object of the class
     declare_BC = Betti_Curve(BC, dataset)
+    plot_BC(declare_BC)
    
     
 if __name__ == "__main__":
