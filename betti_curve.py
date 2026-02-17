@@ -51,6 +51,7 @@ class Betti_Curve:
             np.savetxt(f"pd_sample{i}.csv", PD[i], delimiter=",", header="birth,death,dim", comments="")
 
 # Plot the Betti Curves on the same graph for easier comparison 
+# Input BC = Object of Betti Curve 
 def plot_BC(BC):
     print("Plotting...")
     figs = BC.graph()
