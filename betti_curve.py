@@ -8,6 +8,7 @@ import plotly.graph_objects as go
 from copy import deepcopy
 import random
 
+#class for functions related to betti curve 
 class Betti_Curve:
     def __init__(self, BC, data):
         self.data = data
@@ -19,7 +20,8 @@ class Betti_Curve:
         # array
         pcloud = pcloud.detach().cpu().numpy()
         return pcloud
-        
+    
+    # calculate the persistence diagram
     def persistence_diagram(self):
         # list of 2D point clouds
         pc_list = [self.load_pcloud(paths) for paths in self.data]
@@ -48,6 +50,7 @@ class Betti_Curve:
         for i in range(PD.shape[0]):
             np.savetxt(f"pd_sample{i}.csv", PD[i], delimiter=",", header="birth,death,dim", comments="")
 
+# Plot the Betti Curves on the same graph for easier comparison 
 def plot_BC(BC):
     print("Plotting...")
     figs = BC.graph()
@@ -92,19 +95,8 @@ def gnh_vs_gph(gph_tensor_files):
     
     #plot_BC(declare_BC= declare_BC)
     declare_BC.save_PD()
-    
 
-def main():
-    # Path to the gram_neg host data 
-    print("Starting Code ")
-    gram_neg_hosts = Path("evo2_data/gram_neg/hosts")
-    gram_pos_hosts = Path("evo2_data/gram_pos/hosts")
-
-    gnh_tensor_files = sorted(gram_neg_hosts.glob("*.pt"))
-    #gph_tensor_files = sorted(gram_pos_hosts.glob("*.pt"))
-    
-    #sample 207 from the 308 
-    
+def bootstrapping_gnh(gnh_tensor_files):
     m = 209
     B = 10
     # seeing the gnh's distribution stability by random sampling 209 points ten times and viewing their betti curve 
@@ -137,6 +129,23 @@ def main():
     fig.update_yaxes(rangemode="tozero")
 
     fig.show()
+
+def main():
+    # Path to the gram_neg host data 
+    print("Starting Code ")
+    gram_neg_hosts = Path("evo2_data/gram_neg/hosts")
+    gram_pos_hosts = Path("evo2_data/gram_pos/hosts")
+
+    gnh_tensor_files = sorted(gram_neg_hosts.glob("*.pt"))
+    gph_tensor_files = sorted(gram_pos_hosts.glob("*.pt"))
+    
+    dataset = [gnh_tensor_files, gph_tensor_files]
+    
+    BC = BettiCurve()
+    
+    # declares an object of the class
+    declare_BC = Betti_Curve(BC, dataset)
+   
     
 if __name__ == "__main__":
     main()
